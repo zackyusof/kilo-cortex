@@ -1,0 +1,201 @@
+# ============================================================
+# KILO CORTEX — Dockerized Memory System
+# ============================================================
+# Plug-and-play: docker compose up -d
+# Full docs: https://git.zyusof.net/zack/kilo-cortex
+# ============================================================
+
+x-common: &common
+  restart: unless-stopped
+  networks:
+    - kilo-network
+
+services:
+  # ─── 1. MariaDB — primary database ──────────────────────────
+  mariadb:
+    image: mariadb:11
+    <<: *common
+    container_name: kilo-mariadb
+    ports:
+      - "${MARIADB_PORT:-3306}:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: "${MARIADB_ROOT_PASSWORD:-kilo_root_change_me}"
+      MARIADB_DATABASE: "${MARIADB_DATABASE:-kilo}"
+      MARIADB_USER: "${MARIADB_USER:-kilo}"
+      MARIADB_PASSWORD: "${MARIADB_PASSWORD:-kilo_pass_change_me}"
+      MARIADB_CHARACTER_SET: utf8mb4
+      MARIADB_COLLATE: utf8mb4_unicode_ci
+    volumes:
+      - ./data/mariadb/data:/var/lib/mysql
+      - ./data/mariadb/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost", "-u", "root", "-p${MARIADB_ROOT_PASSWORD:-kilo_root_change_me}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── 2. Redis — L1 hot cache ────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    <<: *common
+    container_name: kilo-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    command: >
+      redis-server /usr/local/etc/redis/redis.conf
+      --requirepass "${REDIS_PASSWORD:-kilo_redis_change_me}"
+    volumes:
+      - ./data/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./data/redis/data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-kilo_redis_change_me}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── 3. Qdrant — vector search ──────────────────────────────
+  qdrant:
+    image: qdrant/qdrant:latest
+    <<: *common
+    container_name: kilo-qdrant
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+      - "${QDRANT_GRPC_PORT:-6334}:6334"
+    volumes:
+      - ./data/qdrant:/qdrant/storage
+    environment:
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-kilo_qdrant_change_me}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ─── 4. Ollama — embedding service ──────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    <<: *common
+    container_name: kilo-ollama
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_GPU=${OLLAMA_GPU:-false}
+    # GPU passthrough (uncomment if you have NVIDIA GPU):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─── 5. Obsidian — L4 knowledge vault ───────────────────────
+  obsidian:
+    image: linuxserver/obsidian:latest
+    <<: *common
+    container_name: kilo-obsidian
+    ports:
+      - "${OBSIDIAN_WEB_PORT:-3000}:3000"
+      - "${OBSIDIAN_VNC_PORT:-5900}:5900"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    volumes:
+      - ./data/obsidian/config:/config
+      - ./data/obsidian/vault:/vault
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─── 6. Memory API — FastAPI wrapper ────────────────────────
+  memory-api:
+    build:
+      context: ./memory-api
+      dockerfile: Dockerfile
+    <<: *common
+    container_name: kilo-memory-api
+    ports:
+      - "${MEMORY_API_PORT:-8088}:8088"
+    environment:
+      - MARIADB_HOST=mariadb
+      - MARIADB_PORT=3306
+      - MARIADB_USER=${MARIADB_USER:-kilo}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD:-kilo_pass_change_me}
+      - MARIADB_DATABASE=${MARIADB_DATABASE:-kilo}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-kilo_redis_change_me}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-kilo_qdrant_change_me}
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-minilm}
+      - DEFAULT_DIMS=${DEFAULT_DIMS:-384}
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  # ─── 7. Kilo Init — one-shot bootstrap ──────────────────────
+  kilo-init:
+    image: python:3.12-slim
+    <<: *common
+    container_name: kilo-init
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    environment:
+      - MARIADB_HOST=mariadb
+      - MARIADB_PORT=3306
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD:-kilo_root_change_me}
+      - MARIADB_USER=${MARIADB_USER:-kilo}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD:-kilo_pass_change_me}
+      - MARIADB_DATABASE=${MARIADB_DATABASE:-kilo}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-kilo_redis_change_me}
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-kilo_qdrant_change_me}
+      - OLLAMA_HOST=ollama
+      - OLLAMA_PORT=11434
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-minilm}
+      - GPU_MODE=${OLLAMA_GPU:-false}
+    volumes:
+      - ./init:/opt/init:ro
+    entrypoint: ["/opt/init/bootstrap.sh"]
+    restart: "no"
+
+networks:
+  kilo-network:
+    name: kilo-network
+    driver: bridge

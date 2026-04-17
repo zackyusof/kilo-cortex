@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate docker-compose
+        uses: lucacome/docker-compose-check-action@v1.0.15
+        with:
+          compose-file: docker-compose.yaml
+
+      - name: Check Python syntax (memory-api)
+        run: |
+          python3 -m py_compile memory-api/main.py
+          echo "Python syntax OK"

@@ -1,0 +1,25 @@
+# Data directories (mounted as volumes)
+data/mariadb/data/
+data/redis/data/
+data/qdrant/storage/
+data/qdrant/snapshots/
+data/ollama/
+data/obsidian/config/
+data/obsidian/vault/
+data/embedding/
+
+# Environment overrides
+.env
+.env.local
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Docker
+docker-compose.override.yaml
+*.log
