@@ -15,6 +15,12 @@
 
 ---
 
+![The New Memory Architecture](assets/newmemtech-preview.png)
+
+> A live preview of `https://www.zyusof.net/newmemtech/`
+
+---
+
 ## 1. TL;DR — Use It in 10 Seconds
 
 ```bash
@@ -490,14 +496,6 @@ Most AI memory projects do **one thing**: vector search (claude-mem, OpenMemory)
 | **Architecture** | Single store | 4-layer cascade (cache → structured → vector → vault) |
 | **Data ownership** | Partially cloud-dependent | Fully self-hosted, 100% local |
 | **Knowledge base** | Embedded vectors only | Obsidian vault with human-readable Markdown |
-
----
-
-## 15. Live Demo
-
-A live preview of the architecture page at `https://www.zyusof.net/newmemtech/`:
-
-![The New Memory Architecture](assets/newmemtech-preview.png)
 
 ---
 
