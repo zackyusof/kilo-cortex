@@ -1,126 +1,287 @@
-# Kilo Cortex — Dockerized Memory System
+<div align="center">
 
-**Plug-and-play memory backend.** Clone, run, and you have a fully functional memory system with vector search, caching, and knowledge base.
+# Kilo Cortex
+
+**Self-hosted cognitive memory engine for AI agents.** Long-term memory with Hebbian learning, decay, and knowledge graphs — not just RAG.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-compose-ready-blue?logo=docker)](https://docker.com)
+[![Python](https://img.shields.io/badge/python-3.12+-green.svg)](https://python.org)
+[![Stars](https://img.shields.io/github/stars/zack/kilo-cortex?style=social)](https://git.zyusof.net/zack/kilo-cortex)
+
+</div>
+
+> Your model stays stateless. **Your agent stops being amnesiac.**
+
+---
+
+## 1. TL;DR — Use It in 10 Seconds
+
+```bash
+git clone https://git.zyusof.net/zack/kilo-cortex.git && cd kilo-cortex
+docker compose up -d
+curl -s http://localhost:8088/health
+```
+
+That's it. You now have a full memory backend with vector search, associative links, and decay-based forgetting.
+
+### Quick API Example
+
+```bash
+# Create a memory
+curl -s http://localhost:8088/memories -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Zack prefers dark mode and Rust", "category": "preference"}'
+
+# Search it back
+curl -s http://localhost:8088/search -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "editor preferences"}' | python3 -m json.tool
+```
+
+---
+
+## 2. Why Kilo Cortex (vs RAG, vs "just vectors")
+
+Most "AI memory" is really just **RAG pipelines**:
+
+- text is chunked → embedded → stored in a vector DB → retrieved by similarity
+- They don't understand **facts vs events vs preferences vs skills**
+- No temporal reasoning — everything from last week has the same weight as yesterday
+- No decay or reinforcement — memories don't fade or strengthen over time
+- No associations — there's no graph of how memories connect
+
+**Cloud memory APIs add**: vendor lock-in, latency, opaque behavior, privacy problems.
+
+**Kilo Cortex gives you an actual memory system:**
+
+- 🧠 **Multi-sector memory** — episodic, semantic, procedural, preference, rule
+- ⏱ **Temporal knowledge** — `valid_from`/`valid_to` truth windows, point-in-time queries
+- 📉 **Decay & reinforcement** — adaptive forgetting instead of hard TTLs
+- 🔗 **Hebbian associative links** — coactivated memories strengthen over time
+- 🧬 **Knowledge graph** — structured relationships between facts
+- 🔍 **Hybrid search** — vector + keyword + graph traversal
+- 🏠 **Self-hosted, local-first** — you own the DB, you control the data
+- 📦 **Plug-and-play Docker** — one command, everything runs
+
+---
+
+## 3. Memory Architecture
+
+```mermaid
+graph TB
+    classDef agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px
+    classDef api fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    classDef layer1 fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef layer2 fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef layer3 fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef layer4 fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef storage fill:#eceff1,stroke:#455a64,stroke-width:2px
+
+    AGENT[AI Agent / CLI / IDE]:::agent
+
+    subgraph API_LAYER ["HTTP API Layer (FastAPI)"]
+        API[Memory API :8088]:::api
+    end
+
+    AGENT --> API
+
+    subgraph MEMORY_LAYERS ["4-Layer Memory System"]
+        L1[<b>L1: Hot Cache</b><br/>Redis — sub-ms lookups<br/>Session context, stats]:::layer1
+        L2[<b>L2: Primary Store</b><br/>MariaDB — 14 tables<br/>Hebbian links, rules, sessions]:::layer2
+        L3[<b>L3: Vector Search</b><br/>Qdrant — semantic recall<br/>384/768-dim cosine similarity]:::layer3
+        L4[<b>L4: Knowledge Vault</b><br/>Obsidian — rich documents<br/>Markdown + wikilinks + tags]:::layer4
+    end
+
+    API --> L1
+    API --> L2
+    API --> L3
+    L3 -.-> L4
+
+    EMBED[(Embedding Engine<br/>Ollama :11434)]:::layer3
+    L2 --> EMBED
+    L3 --> EMBED
+```
+
+### Memory Layers
+
+| Layer | Technology | Role | Latency |
+|-------|-----------|------|---------|
+| **L1 — Hot Cache** | Redis 7 | Session context, stats, search cache | <1ms |
+| **L2 — Primary Store** | MariaDB 11 | Structured memories, rules, Hebbian links | 5-15ms |
+| **L3 — Vector Search** | Qdrant | Semantic recall, similarity matching | 10-50ms |
+| **L4 — Knowledge Vault** | Obsidian | Rich documents, wikilinks, attachments | 50-200ms |
+
+### Memory Sectors
+
+Kilo Cortex classifies memories into sectors, each with different storage and retrieval strategies:
+
+| Sector | Example | Storage | Retrieval |
+|--------|---------|---------|-----------|
+| **Episodic** | "Debugged auth bug in PR #42" | Vector + keyword | Temporal + semantic |
+| **Semantic** | "PostgreSQL uses MVCC" | Vector + graph | Semantic similarity |
+| **Procedural** | "Run `docker compose down -v` to reset" | Hebbian links | Association strength |
+| **Preference** | "Prefers Rust over Go" | Rule table | Pattern matching |
+| **Rule** | "Never write to ~/" | Learned rules | Confidence-weighted |
+
+---
+
+## 4. The "Old Way" vs Kilo Cortex
+
+**Vector DB + LangChain (cloud-heavy, amnesiac):**
+
+```python
+from langchain.vectorstores import Qdrant
+from langchain.embeddings import OpenAIEmbeddings
+# Cloud config, no temporal awareness, no associations
+# Every query = full embedding of context window
+```
+
+**Kilo Cortex (self-hosted, structured, remembers):**
+
+```bash
+curl -s http://localhost:8088/memories -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Always use ctx switches before commit", "category": "rule"}'
+
+# Agent recalls rule automatically next session
+curl -s http://localhost:8088/search -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "git workflow"}'
+```
+
+✅ Self-hosted & local • ✅ Temporal reasoning • ✅ Hebbian associations • ✅ Decay-based forgetting • ✅ Zero vendor lock-in
+
+---
+
+## 5. Features at a Glance
+
+### Core Memory
+- **4-layer memory architecture** — hot cache → structured store → vector recall → knowledge vault
+- **Hybrid search** — vector embeddings + full-text keyword + graph traversal
+- **Hebbian associative links** — coactivated memories strengthen automatically
+- **Strength & decay model** — memories fade with disuse, strengthen with retrieval
+- **Quality scoring** — auto-assessed clarity, specificity, novelty, relevance
+- **Feedback loop** — user ratings reinforce or weaken memories
+
+### Structured Data
+- **14 database tables** — memories, rules, sessions, links, feedback, telemetry
+- **Pattern triggers** — 8 built-in rules for auto-classification (errors, decisions, sessions)
+- **Learned rules** — agent-learned patterns with confidence and trigger counts
+- **Session management** — group memories by interaction sessions
+- **Config audit log** — track every configuration change
+
+### Ingestion & Processing
+- **Queue-based ingestion** — batch ingest with priority and deduplication
+- **Auto-tagging** — discover and tag new memories automatically
+- **Discovery cache** — deduplicated discovery results with TTL
+- **Telemetry** — track query performance, latency, and usage patterns
+
+### Integration
+- **FastAPI HTTP API** — 23 endpoints, fully documented, OpenAPI spec
+- **Docker Compose** — 7 services, one command, zero config
+- **CLI companion** — `python3 memory.py` for terminal-based operations
+- **MCP-ready** — designed for integration with Claude Code, Cursor, Codex, VS Code
+- **Obsidian vault** — human-readable Markdown knowledge base with VNC web UI
+
+---
+
+## 6. Getting Started
+
+### Prerequisites
+
+- Docker & Docker Compose v2
+- (Optional) NVIDIA GPU + NVIDIA Container Toolkit for GPU embedding
+- ~2GB RAM minimum (4GB recommended)
+
+### Install
 
 ```bash
 git clone https://git.zyusof.net/zack/kilo-cortex.git
 cd kilo-cortex
-cp .env.example .env          # Optional: customize defaults
-docker compose up -d
 ```
 
-## Quick Start
+### Start All Services
 
 ```bash
-# Start all services (CPU mode, no Obsidian)
+# Default: CPU mode, no Obsidian vault
 docker compose up -d
 
-# Start with Obsidian vault
-docker compose --profile obsidian up -d
-
-# Start with GPU support (uncomment GPU config in compose file first)
-# docker compose --profile gpu up -d
-
-# Start everything
+# With Obsidian knowledge vault
 docker compose up -d
 
-# View status
+# Verify everything started
 docker compose ps
 
 # Check health
 curl http://localhost:8088/health | python3 -m json.tool
 ```
 
-## Services
+### Verify the Memory Works
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **MariaDB** | `3306` | Primary memory store (14 tables) |
-| **Redis** | `6379` | L1 hot cache with persistence |
-| **Qdrant** | `6333` / `6334` | Vector search (REST / gRPC) |
-| **Ollama** | `11434` | Embedding service (CPU: all-minilm) |
-| **Memory API** | `8088` | FastAPI HTTP interface |
-| **Obsidian** | `3000` / `5900` | Web UI / VNC (optional) |
+```bash
+# Create a memory
+curl -s http://localhost:8088/memories -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Zack uses archlinux with swaywm", "category": "preference"}'
 
-## API Endpoints
+# Search for it
+curl -s http://localhost:8088/search -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"query": "linux desktop environment"}' | python3 -m json.tool
+
+# View system stats
+curl -s http://localhost:8088/stats | python3 -m json.tool
+```
+
+### Deploy Profiles
+
+| Profile | Description | Command |
+|---------|-------------|---------|
+| **Default** | Core 5 services (MariaDB, Redis, Qdrant, Ollama, Memory API) | `docker compose up -d` |
+| **Obsidian** | + Obsidian vault (Web + VNC) | `docker compose up -d` |
+| **GPU** | + GPU-accelerated Ollama | Uncomment GPU config, then `docker compose up -d` |
+
+---
+
+## 7. API Reference
+
+Base URL: `http://localhost:8088`
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/` | Health check + service status |
-| `GET` | `/health` | Same as root |
-| `POST` | `/memories` | Create a memory entry |
-| `GET` | `/memories` | List memories (with filters) |
-| `GET` | `/memories/{id}` | Get single memory |
-| `DELETE` | `/memories/{id}` | Delete a memory |
-| `POST` | `/search` | Semantic + keyword hybrid search |
-| `GET` | `/sessions/{id}` | Get session with memories |
-| `POST` | `/sessions` | Create a new session |
+| `GET` | `/` | Health check + all service statuses |
+| `POST` | `/memories` | Create memory with auto-embedding |
+| `GET` | `/memories` | List with `?category=&limit=&offset=` |
+| `GET` | `/memories/{id}` | Get single memory by ID |
+| `DELETE` | `/memories/{id}` | Delete a memory entry |
+| `POST` | `/search` | Hybrid semantic + keyword search |
+| `GET` | `/sessions/{id}` | Session + associated memories |
+| `POST` | `/sessions` | Create new session |
 | `GET` | `/rules` | List learned rules |
-| `POST` | `/rules` | Create a learned rule |
-| `PUT` | `/config/{field}` | Update configuration |
-| `GET` | `/config/{field}` | Get config history |
-| `GET` | `/quality` | List quality reports |
-| `POST` | `/quality/check` | Run quality checks |
-| `GET` | `/stats` | System statistics |
-| `POST` | `/ingest` | Queue memory for ingestion |
+| `POST` | `/rules` | Create learned rule |
+| `PUT` | `/config/{field}` | Update configuration (audited) |
+| `GET` | `/config/{field}` | Config change history |
+| `GET` | `/quality` | Quality reports list |
+| `POST` | `/quality/check` | Run quality checks (`entries`/`stale`/`orphaned`) |
+| `GET` | `/stats` | System statistics (cached) |
+| `POST` | `/ingest` | Queue memory for batch processing |
 | `POST` | `/ingest/process` | Process queued memories |
-| `GET` | `/telemetry` | Query telemetry report |
-| `GET` | `/models` | List Ollama models |
-| `POST` | `/models/pull` | Pull an embedding model |
+| `GET` | `/ingest/status` | Ingestion queue status |
+| `GET` | `/telemetry` | Query performance report |
+| `POST` | `/models/pull` | Pull Ollama model by name |
 | `GET` | `/collections` | List Qdrant collections |
-| `GET` | `/export` | Export all data as JSON |
+| `GET` | `/export` | Full JSON export of all data |
 
-### Example: Create a Memory
+### OpenAPI Docs
 
-```bash
-curl -s http://localhost:8088/memories \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"content": "The user prefers Python over Go for backend work", "category": "preference"}'
-```
+When running, visit `http://localhost:8088/docs` for the interactive Swagger UI.
 
-### Example: Search
+---
 
-```bash
-curl -s http://localhost:8088/search \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"query": "programming preferences"}'
-```
+## 8. Configuration
 
-## Architecture
-
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  Memory API  │────▶│   MariaDB   │     │    Redis    │
-│  (FastAPI)   │     │  (14 tables)│     │  (L1 cache) │
-│  :8088       │     └─────────────┘     └─────────────┘
-└──────┬───────┐
-       │       │
-       ▼       ▼
-┌─────────────┐     ┌─────────────┐
-│   Qdrant    │     │   Ollama    │
-│  (vector)   │◀────│ (embedding) │
-│  :6333      │     │  :11434     │
-└─────────────┘     └─────────────┘
-       ▲
-       │ (optional)
-┌──────┴───────┐
-│  Obsidian    │
-│   (L4 vault) │
-│  :3000/:5900 │
-└──────────────┘
-```
-
-**Memory Layers:**
-- **L1** — Redis hot cache (sub-millisecond lookups)
-- **L2** — MariaDB primary store + Qdrant vector search
-- **L3** — Ollama embeddings for semantic similarity
-- **L4** — Obsidian vault for rich knowledge base
-
-## Configuration
-
-Copy `.env.example` to `.env` and customize:
+Copy `.env.example` to `.env` for full customization:
 
 ```bash
 cp .env.example .env
@@ -128,54 +289,181 @@ cp .env.example .env
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `MARIADB_PORT` | `3306` | MariaDB external port |
 | `MARIADB_ROOT_PASSWORD` | `kilo_root_change_me` | MariaDB root password |
 | `MARIADB_USER` | `kilo` | Database user |
 | `MARIADB_PASSWORD` | `kilo_pass_change_me` | Database password |
+| `REDIS_PORT` | `6379` | Redis external port |
 | `REDIS_PASSWORD` | `kilo_redis_change_me` | Redis authentication |
+| `QDRANT_PORT` | `6333` | Qdrant REST port |
+| `QDRANT_GRPC_PORT` | `6334` | Qdrant gRPC port |
 | `QDRANT_API_KEY` | `kilo_qdrant_change_me` | Qdrant API key |
+| `OLLAMA_PORT` | `11434` | Ollama external port |
 | `OLLAMA_GPU` | `false` | Enable GPU passthrough |
-| `EMBEDDING_MODEL` | `all-minilm` | Default embedding model |
+| `EMBEDDING_MODEL` | `all-minilm` | Embedding model name |
+| `DEFAULT_DIMS` | `384` | Default vector dimensions |
+| `MEMORY_API_PORT` | `8088` | Memory API port |
+| `OBSIDIAN_WEB_PORT` | `3000` | Obsidian web UI port |
+| `OBSIDIAN_VNC_PORT` | `5900` | Obsidian VNC port |
 
-## Volume Layout
+### Embedding Models
+
+| Model | Dimensions | Use Case |
+|-------|-----------|----------|
+| `all-minilm` (default) | 384 | CPU, fast, lightweight |
+| `nomic-embed-text` | 768 | Better quality, still CPU-friendly |
+| `mxbai-embed-large` | 1024 | Higher quality, more VRAM |
+
+---
+
+## 9. Volume Layout
 
 ```
 data/
-├── mariadb/data     # MariaDB persistent storage
-├── mariadb/init/    # SQL init scripts (read-only)
-├── redis/data       # Redis persistence
-├── redis/redis.conf # Redis configuration
-├── qdrant/          # Qdrant vector storage
-├── ollama/          # Ollama model storage
-└── obsidian/        # Obsidian vault + config (optional)
+├── mariadb/data          # MariaDB persistent storage
+├── mariadb/init/         # SQL init scripts (read-only bind)
+│   ├── 01-schema.sql     # 14 tables
+│   └── 02-seed-patterns.sql  # 8 default triggers
+├── redis/
+│   ├── data/             # Redis AOF persistence
+│   └── redis.conf        # Redis configuration
+├── qdrant/               # Qdrant vector storage + snapshots
+├── ollama/               # Ollama model storage (persistent)
+└── obsidian/             # Obsidian vault + config (optional)
+    ├── config/
+    └── vault/
 ```
 
-## GPU Support
+**Important:** Only mount `data/` — it persists across container rebuilds. Never commit files inside `data/` to version control.
 
-1. Uncomment the `deploy:` section under `ollama-gpu` in `docker-compose.yaml`
-2. Ensure NVIDIA Container Toolkit is installed
-3. Run with: `OLLAMA_GPU=true docker compose up -d`
+---
 
-## Troubleshooting
+## 10. Integrations
+
+### Claude Code
+
+Connect via MCP (coming soon):
 
 ```bash
-# Check service health
+# Future: claude mcp add --transport http kilo-cortex http://localhost:8088/mcp
+```
+
+### Cursor / VS Code
+
+Connect via MCP config:
+
+```json
+{
+  "mcpServers": {
+    "kilo-memory": {
+      "type": "http",
+      "url": "http://localhost:8088/mcp"
+    }
+  }
+}
+```
+
+### CLI Memory Access
+
+The host-side `memory.py` CLI provides terminal access:
+
+```bash
+python3 memory.py log "always use ctx switches before commit" --tags git,workflow
+python3 memory.py search "git workflow"
+python3 memory.py stats
+python3 memory.py health
+```
+
+### REST / cURL
+
+Every feature is accessible via the HTTP API. See section 7 above.
+
+---
+
+## 11. GPU Support
+
+For better embedding quality with NVIDIA GPUs:
+
+1. Install NVIDIA Container Toolkit
+2. Edit `docker-compose.yaml` — uncomment the `deploy:` section under `ollama`
+3. Run:
+
+```bash
+OLLAMA_GPU=true docker compose up -d
+```
+
+GPU mode switches to 768-dim models and updates Qdrant collections automatically during bootstrap.
+
+---
+
+## 12. Troubleshooting
+
+```bash
+# Check all services
 curl http://localhost:8088/health | python3 -m json.tool
 
 # View logs
 docker compose logs -f memory-api
 docker compose logs -f mariadb
 docker compose logs -f qdrant
+docker compose logs -f ollama
 
-# Re-run bootstrap (if needed)
+# Re-run bootstrap (if collections/models missing)
 docker compose down
 docker compose up -d
 docker compose up kilo-init
 
-# Reset everything
-docker compose down -v    # WARNING: deletes all data
+# Full reset (WARNING: deletes all data)
+docker compose down -v
 docker compose up -d
+
+# Database issues
+docker compose exec mariadb mariadb -u kilo -p kilo
+
+# Qdrant issues
+curl http://localhost:6333/collections | python3 -m json.tool
+
+# Ollama model status
+curl http://localhost:11434/api/tags | python3 -m json.tool
 ```
 
-## License
+---
 
-MIT
+## 13. Roadmap
+
+| Feature | Status |
+|---------|--------|
+| MCP server for Claude Code / Cursor | 🔲 Planned |
+| Memory visualizer dashboard | 🔲 Planned |
+| Multi-user / tenant isolation | 🔲 Planned |
+| FSRS-6 spaced repetition | 🔲 Planned |
+| Knowledge graph visualization | 🔲 Planned |
+| Agent-to-agent messaging | 🔲 Planned |
+| Encrypted memory at rest | 🔲 Planned |
+
+---
+
+## 14. Compare With
+
+| Feature | Kilo Cortex | Vector-only RAG | Cloud APIs |
+|---------|-------------|-----------------|------------|
+| Self-hosted | ✅ | ✅ | ❌ |
+| Temporal reasoning | ✅ | ❌ | ❌ |
+| Hebbian associations | ✅ | ❌ | ❌ |
+| Decay/reinforcement | ✅ | ❌ | ❌ |
+| Knowledge graph | ✅ | ❌ | ❌ |
+| Multi-sector memory | ✅ | ❌ | Partial |
+| Zero vendor lock-in | ✅ | ✅ | ❌ |
+| Hybrid search | ✅ | ✅ | ✅ |
+| Offline-first | ✅ | ✅ | ❌ |
+
+---
+
+## 15. License
+
+MIT — see [LICENSE](LICENSE) for details.
+
+---
+
+**Built for agents that need to remember.**
+**Self-hosted. Private. Yours.**
