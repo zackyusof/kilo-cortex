@@ -15,9 +15,7 @@
 
 ---
 
-![The New Memory Architecture](assets/newmemtech-preview.png)
-
-> A live preview of `https://www.zyusof.net/newmemtech/`
+[![The New Memory Architecture](assets/newmemtech-preview.png)](https://www.zyusof.net/newmemtech/)
 
 ---
 
