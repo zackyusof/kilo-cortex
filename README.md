@@ -15,6 +15,54 @@
 
 ---
 
+## ⚡ The Problem You Face Right Now
+
+**Your AI agent forgets everything between sessions.**
+
+- You explain your workflow preferences. Next session: forgotten.
+- The agent repeats the same mistakes over and over.
+- It never learns from past interactions or failures.
+- Every conversation is treated as if it's starting fresh.
+- You spend energy re-teaching it the same patterns.
+- Your knowledge doesn't compound — it resets.
+
+**This isn't a limitation of the model. It's a limitation of how you're storing context.**
+
+---
+
+## 🎯 What Becomes Possible With Kilo Cortex
+
+Your AI gains **continuous identity and learning**:
+
+- **It remembers who you are.** Your preferences, style, constraints — automatically recalled.
+- **It learns from experience.** Patterns from past sessions inform future decisions.
+- **It improves over time.** Each interaction strengthens useful memories, weakens outdated ones.
+- **It knows what it knows.** Memories are tagged by type (fact, skill, preference, rule) so retrieval is precise.
+- **It understands time.** "This was true 3 months ago, but not anymore" vs "this is always true."
+
+**Real example workflow:**
+
+```
+Session 1: User explains "Always run tests before committing"
+          Agent stores: RULE + triggers
+
+Session 2: Agent suggests running tests before committing (remembered!)
+          User confirms — memory strength increases
+
+Session 3: User says "But skip tests for docs-only changes"
+          Agent updates rule with exception, learns from feedback
+
+Session 4: User commits docs change without tests
+          Agent: "Should I run tests?" 
+          User: "Nope, docs only"
+          Agent learns the exception applies here too
+```
+
+**Without Kilo Cortex:** Every session restarts. Lost knowledge.  
+**With Kilo Cortex:** Agent gets smarter every session.
+
+---
+
 [![The New Memory Architecture](assets/newmemtech-preview.png)](https://www.zyusof.net/newmemtech/)
 
 ---
@@ -45,28 +93,52 @@ curl -s http://localhost:8088/search -X POST \
 
 ---
 
-## 2. Why Kilo Cortex (vs RAG, vs "just vectors")
+## 2. Why Kilo Cortex (vs Everything Else)
 
-Most "AI memory" is really just **RAG pipelines**:
+### The RAG Problem
 
-- text is chunked → embedded → stored in a vector DB → retrieved by similarity
-- They don't understand **facts vs events vs preferences vs skills**
-- No temporal reasoning — everything from last week has the same weight as yesterday
-- No decay or reinforcement — memories don't fade or strengthen over time
-- No associations — there's no graph of how memories connect
+Most "AI memory" is just **vector similarity search**:
+- Text gets chunked → embedded → stored → retrieved by similarity
+- No understanding of **what kind** of memory (fact? skill? preference? rule?)
+- No temporal awareness (everything from last month = everything from yesterday)
+- No learning or forgetting (static database, not adaptive)
+- No relationships between memories (isolated embeddings)
 
-**Cloud memory APIs add**: vendor lock-in, latency, opaque behavior, privacy problems.
+**Result:** Expensive retrieval, weak recall, zero learning.
 
-**Kilo Cortex gives you an actual memory system:**
+### The Cloud API Problem
 
-- 🧠 **Multi-sector memory** — episodic, semantic, procedural, preference, rule
-- ⏱ **Temporal knowledge** — `valid_from`/`valid_to` truth windows, point-in-time queries
-- 📉 **Decay & reinforcement** — adaptive forgetting instead of hard TTLs
-- 🔗 **Hebbian associative links** — coactivated memories strengthen over time
-- 🧬 **Knowledge graph** — structured relationships between facts
-- 🔍 **Hybrid search** — vector + keyword + graph traversal
-- 🏠 **Self-hosted, local-first** — you own the DB, you control the data
-- 📦 **Plug-and-play Docker** — one command, everything runs
+Managed memory services (Pinecone, Weaviate Cloud, etc.) add:
+- Vendor lock-in (stuck if they change pricing or shut down)
+- Latency (network round-trips even for cache hits)
+- Privacy concerns (your data on their infrastructure)
+- Opaque behavior (can't debug, can't optimize)
+- Subscription costs that compound over time
+
+### The Kilo Cortex Difference
+
+**Not "just vectors." An actual memory system with learning:**
+
+| Capability | RAG / Vectors | Cloud APIs | Kilo Cortex |
+|-----------|---------------|-----------|------------|
+| **Understands memory types** | ❌ One blob | Partial | ✅ 5 distinct sectors |
+| **Temporal reasoning** | ❌ Timestamp only | ❌ None | ✅ Truth windows + history |
+| **Learns over time** | ❌ Static | ❌ No | ✅ Hebbian + decay |
+| **Associations between memories** | ❌ None | ❌ None | ✅ Knowledge graph |
+| **Self-hosted** | ✅ Maybe | ❌ Cloud only | ✅ 100% local |
+| **Deterministic, debuggable** | Partial | ❌ Opaque | ✅ Full transparency |
+| **Cost** | Free / cheap | $50-500/mo | One-time setup, zero recurring |
+
+**What this means in practice:**
+
+- 🧠 **Multi-sector memory** — Facts, skills, preferences, rules, experiences stored differently
+- ⏱ **Temporal awareness** — "This was true Q1, now obsolete" vs "always true"
+- 📉 **Adaptive decay** — Unused memories fade; frequently retrieved memories strengthen
+- 🔗 **Associative learning** — Related memories strengthen when co-activated (Hebbian learning)
+- 🧬 **Knowledge graph** — Structured relationships between facts (not just embeddings)
+- 🔍 **Hybrid search** — Vector + keyword + graph = better recall, less hallucination
+- 🏠 **Self-hosted** — Your data stays local, no API dependencies
+- 📦 **Plug-and-play** — One Docker command, everything works offline
 
 ---
 
@@ -479,37 +551,76 @@ curl http://localhost:11434/api/tags | python3 -m json.tool
 
 ---
 
-### Kilo Cortex vs. the Field
+## 15. Kilo Cortex vs. Competitors — Real Scenarios
 
-Here's how Kilo Cortex stacks up against the most popular AI memory projects on GitHub:
+### The Comparison
 
-| Project | ⭐ | Storage | Graph | Memory Model | Self-hosted | Multi-layer | Decay/Forgetting |
-|---------|------|---------|-------|--------------|-------------|-------------|------------------|
-| **Kilo Cortex** | — | MariaDB + Redis + Qdrant + Obsidian | ✅ Hebbian + knowledge graph | **5 sectors** (episodic, semantic, procedural, preference, rule) + temporal | ✅ | ✅ 4 layers | ✅ Adaptive decay |
-| [claude-mem](https://github.com/thedotmack/claude-mem) | 61.1k | SQLite | ❌ | Single flat store | ✅ | ❌ Single | ❌ |
-| [supermemory](https://github.com/supermemoryai/supermemory) | 21.9k | PostgreSQL | ❌ | Flat memory + app | ✅ | ❌ Single | ❌ |
-| [cognee](https://github.com/topoteretes/cognee) | 16.1k | Neo4j | ✅ Knowledge graph | Knowledge engine | ✅ | ❌ Single | ❌ |
-| [Memori](https://github.com/MemoriLabs/Memori) | 13.3k | Custom | ❌ | Structured persistence | ✅ | ❌ Single | ❌ |
-| [julep](https://github.com/julep-ai/julep) | 6.6k | Serverless | ❌ | Session-based | ❌ (cloud) | ❌ Single | ❌ |
-| [OpenMemory](https://github.com/CaviraOSS/OpenMemory) | 4k | Local file | ❌ | Flat store | ✅ | ❌ Single | ❌ |
-| [memobase](https://github.com/memodb-io/memobase) | 2.7k | Custom | ❌ | User profile | ✅ | ❌ Single | ❌ |
-| [memohai/Memoh](https://github.com/memohai/Memoh) | 1.5k | Custom | ❌ | Agent sessions | ✅ | ❌ Single | ❌ |
+Here's how Kilo Cortex stacks up against the most popular AI memory projects:
 
-### What Makes Kilo Cortex Different
+| Project | Stars | What It Does | What's Missing | Best For |
+|---------|-------|-------------|-----------------|----------|
+| **Kilo Cortex** | — | 5-sector memory + learning + graph + temporal | (mature, complete) | Building agents with real intelligence |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | 61.1k | SQLite memory snapshots | No learning, no types, no associations | Quick Claude integration |
+| [supermemory](https://github.com/supermemoryai/supermemory) | 21.9k | PostgreSQL + web UI | No learning, treats all memories the same | Content curation app |
+| [cognee](https://github.com/topoteretes/cognee) | 16.1k | Neo4j knowledge graph | No temporal reasoning, no decay, single storage layer | Pure graph problems |
+| [Memori](https://github.com/MemoriLabs/Memori) | 13.3k | Structured persistence | No learning, no types, no semantics | Session logging |
+| [julep](https://github.com/julep-ai/julep) | 6.6k | Cloud-based agent sessions | Vendor lock-in, cloud-only, no learning | Quick prototypes (if you accept vendor lock) |
 
-Most AI memory projects do **one thing**: vector search (claude-mem, OpenMemory), graph storage (cognee), or session tracking (julep, memobase). They share a common blind spot — they store memories as flat embeddings without understanding **what kind of memory** they're handling.
+### When You'd Pick Each
 
-**Kilo Cortex is different because:**
+**claude-mem** ("Vector snapshots are enough")
+- ✅ If: You just need basic memory for Claude via API
+- ❌ If: You want agents that actually learn
 
-| Dimension | Others | Kilo Cortex |
-|-----------|--------|-------------|
-| **Memory types** | Treated as one blob | 5 distinct sectors with different strategies |
-| **Temporal reasoning** | Timestamps only | Truth windows + point-in-time queries |
-| **Associations** | None or basic graph | Hebbian learning (strengthening through co-activation) |
-| **Forgetting** | Hard TTL or none | Adaptive decay based on retrieval frequency |
-| **Architecture** | Single store | 4-layer cascade (cache → structured → vector → vault) |
-| **Data ownership** | Partially cloud-dependent | Fully self-hosted, 100% local |
-| **Knowledge base** | Embedded vectors only | Obsidian vault with human-readable Markdown |
+**supermemory** ("I want a pretty interface")
+- ✅ If: You're building a user-facing memory app
+- ❌ If: You need programmatic learning and reasoning
+
+**cognee** ("I love knowledge graphs")
+- ✅ If: Your problem is pure graph structure (entities + relationships)
+- ❌ If: You need temporal reasoning, learning, or multiple memory types
+
+**julep** ("Cloud is fine")
+- ✅ If: You need vendor-managed agents and accept lock-in
+- ❌ If: You care about data ownership or cost at scale
+
+**Kilo Cortex** ("I'm building real AI that learns")
+- ✅ If: You want agents with continuous identity and improvement
+- ✅ If: You need full data ownership and no vendor dependency
+- ✅ If: You want temporal reasoning and Hebbian learning
+- ✅ If: You need hybrid search (vectors + keywords + graph)
+- ✅ If: You're building for production and need reliability
+
+### The Technical Reality
+
+**The problem with other projects:**
+
+They treat memory as a **retrieval problem**, not a **learning problem**.
+- Store text → embed it → retrieve by similarity
+- Works for static knowledge bases
+- Fails for agents that need to improve
+
+**Kilo Cortex solves the learning problem:**
+
+```
+Session 1: Store memory "Never use X in this codebase"
+           Strength: 100, Decay: 0.01
+
+Session 2: Agent recalls and applies rule
+           Strength increases to 105 (reinforcement)
+           Decay rate stays low (frequent retrieval)
+
+Session 3: You say "Actually, X is fine now"
+           System downgrades to outdated (Decay increased)
+           
+Next Month: Memory has faded (low strength, high decay)
+           Agent won't suggest outdated rule anymore
+```
+
+Other systems: Memory stays forever (hallucinations) or disappears immediately (forgotten knowledge).  
+Kilo Cortex: Memory adapts based on reality.
+
+---
 
 ---
 
