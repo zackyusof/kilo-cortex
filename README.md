@@ -119,7 +119,7 @@ Kilo Cortex classifies memories into sectors, each with different storage and re
 | Sector | Example | Storage | Retrieval |
 |--------|---------|---------|-----------|
 | **Episodic** | "Debugged auth bug in PR #42" | Vector + keyword | Temporal + semantic |
-| **Semantic** | "PostgreSQL uses MVCC" | Vector + graph | Semantic similarity |
+| **Semantic** | "MariaDB supports recursive CTEs" | Vector + graph | Semantic similarity |
 | **Procedural** | "Run `docker compose down -v` to reset" | Hebbian links | Association strength |
 | **Preference** | "Prefers Rust over Go" | Rule table | Pattern matching |
 | **Rule** | "Never write to ~/" | Learned rules | Confidence-weighted |
