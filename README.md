@@ -497,7 +497,7 @@ Most AI memory projects do **one thing**: vector search (claude-mem, OpenMemory)
 
 Embeds the running The New Memory architecture page for a real-time preview:
 
-<iframe src="http://192.168.1.223:3333/newmemtech/" width="100%" height="800" style="border:none; border-radius:8px; margin:16px 0;"></iframe>
+<iframe src="https://www.zyusof.net/newmemtech/" width="100%" height="800" style="border:none; border-radius:8px; margin:16px 0;"></iframe>
 
 ---
 
