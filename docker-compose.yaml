@@ -159,7 +159,26 @@ services:
       retries: 10
       start_period: 20s
 
-  # ─── 7. Kilo Init — one-shot bootstrap ──────────────────────
+  # ─── 7. MCP Server — Claude Code / Cursor integration ───────
+  mcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    <<: *common
+    container_name: kilo-mcp-server
+    environment:
+      - CORTEX_API_URL=http://memory-api:8088
+      - CORTEX_TIMEOUT_SECONDS=30
+      - CORTEX_LOG_LEVEL=INFO
+    depends_on:
+      memory-api:
+        condition: service_healthy
+    # Stdio mode — no ports exposed. MCP hosts connect via Docker exec.
+    # For Claude Desktop: run `docker exec -i kilo-mcp-server kilo-mcp` as the command.
+    # For local dev: docker exec -it kilo-mcp-server sh
+    restart: unless-stopped
+
+  # ─── 8. Kilo Init — one-shot bootstrap ──────────────────────
   kilo-init:
     image: python:3.12-slim
     <<: *common

@@ -183,9 +183,9 @@ curl -s http://localhost:8088/search -X POST \
 
 ### Integration
 - **FastAPI HTTP API** — 23 endpoints, fully documented, OpenAPI spec
-- **Docker Compose** — 7 services, one command, zero config
+- **Docker Compose** — 8 services, one command, zero config
+- **MCP server** — 19 tools, 3 resources, 2 prompts for Claude Code / Cursor
 - **CLI companion** — `python3 memory.py` for terminal-based operations
-- **MCP-ready** — designed for integration with Claude Code, Cursor, Codex, VS Code
 - **Obsidian vault** — human-readable Markdown knowledge base with VNC web UI
 
 ---
@@ -242,7 +242,7 @@ curl -s http://localhost:8088/stats | python3 -m json.tool
 
 | Profile | Description | Command |
 |---------|-------------|---------|
-| **Default** | Core 5 services (MariaDB, Redis, Qdrant, Ollama, Memory API) | `docker compose up -d` |
+| **Default** | Core 6 services (MariaDB, Redis, Qdrant, Ollama, Memory API, MCP Server) | `docker compose up -d` |
 | **Obsidian** | + Obsidian vault (Web + VNC) | `docker compose up -d` |
 | **GPU** | + GPU-accelerated Ollama | Uncomment GPU config, then `docker compose up -d` |
 
@@ -344,24 +344,40 @@ data/
 
 ## 10. Integrations
 
-### Claude Code
+### Claude Code / Cursor / MCP Hosts
 
-Connect via MCP (coming soon):
+The MCP server is built into the Docker Compose stack. Run it standalone for local development:
 
 ```bash
-# Future: claude mcp add --transport http kilo-cortex http://localhost:8088/mcp
+# Local dev — stdio mode (for any MCP-compatible host)
+cd mcp-server && pip install -e .
+kilo-mcp
 ```
 
-### Cursor / VS Code
-
-Connect via MCP config:
+For Claude Desktop, add to `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
-    "kilo-memory": {
-      "type": "http",
-      "url": "http://localhost:8088/mcp"
+    "kilo-cortex": {
+      "command": "kilo-mcp",
+      "env": {
+        "CORTEX_API_URL": "http://localhost:8088"
+      }
+    }
+  }
+}
+```
+
+### Cursor / VS Code (Docker-hosted)
+
+```json
+{
+  "mcpServers": {
+    "kilo-cortex": {
+      "command": "docker",
+      "args": ["exec", "-i", "kilo-mcp-server", "kilo-mcp"],
+      "env": {}
     }
   }
 }
@@ -437,7 +453,7 @@ curl http://localhost:11434/api/tags | python3 -m json.tool
 
 | Feature | Status |
 |---------|--------|
-| MCP server for Claude Code / Cursor | 🔲 Planned |
+| MCP server for Claude Code / Cursor | ✅ Done |
 | Memory visualizer dashboard | 🔲 Planned |
 | Multi-user / tenant isolation | 🔲 Planned |
 | FSRS-6 spaced repetition | 🔲 Planned |
