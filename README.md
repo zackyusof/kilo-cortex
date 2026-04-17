@@ -459,6 +459,40 @@ curl http://localhost:11434/api/tags | python3 -m json.tool
 
 ---
 
+### Kilo Cortex vs. the Field
+
+Here's how Kilo Cortex stacks up against the most popular AI memory projects on GitHub:
+
+| Project | ⭐ | Storage | Graph | Memory Model | Self-hosted | Multi-layer | Decay/Forgetting |
+|---------|------|---------|-------|--------------|-------------|-------------|------------------|
+| **Kilo Cortex** | — | MariaDB + Redis + Qdrant + Obsidian | ✅ Hebbian + knowledge graph | **5 sectors** (episodic, semantic, procedural, preference, rule) + temporal | ✅ | ✅ 4 layers | ✅ Adaptive decay |
+| [claude-mem](https://github.com/thedotmack/claude-mem) | 61.1k | SQLite | ❌ | Single flat store | ✅ | ❌ Single | ❌ |
+| [supermemory](https://github.com/supermemoryai/supermemory) | 21.9k | PostgreSQL | ❌ | Flat memory + app | ✅ | ❌ Single | ❌ |
+| [cognee](https://github.com/topoteretes/cognee) | 16.1k | Neo4j | ✅ Knowledge graph | Knowledge engine | ✅ | ❌ Single | ❌ |
+| [Memori](https://github.com/MemoriLabs/Memori) | 13.3k | Custom | ❌ | Structured persistence | ✅ | ❌ Single | ❌ |
+| [julep](https://github.com/julep-ai/julep) | 6.6k | Serverless | ❌ | Session-based | ❌ (cloud) | ❌ Single | ❌ |
+| [OpenMemory](https://github.com/CaviraOSS/OpenMemory) | 4k | Local file | ❌ | Flat store | ✅ | ❌ Single | ❌ |
+| [memobase](https://github.com/memodb-io/memobase) | 2.7k | Custom | ❌ | User profile | ✅ | ❌ Single | ❌ |
+| [memohai/Memoh](https://github.com/memohai/Memoh) | 1.5k | Custom | ❌ | Agent sessions | ✅ | ❌ Single | ❌ |
+
+### What Makes Kilo Cortex Different
+
+Most AI memory projects do **one thing**: vector search (claude-mem, OpenMemory), graph storage (cognee), or session tracking (julep, memobase). They share a common blind spot — they store memories as flat embeddings without understanding **what kind of memory** they're handling.
+
+**Kilo Cortex is different because:**
+
+| Dimension | Others | Kilo Cortex |
+|-----------|--------|-------------|
+| **Memory types** | Treated as one blob | 5 distinct sectors with different strategies |
+| **Temporal reasoning** | Timestamps only | Truth windows + point-in-time queries |
+| **Associations** | None or basic graph | Hebbian learning (strengthening through co-activation) |
+| **Forgetting** | Hard TTL or none | Adaptive decay based on retrieval frequency |
+| **Architecture** | Single store | 4-layer cascade (cache → structured → vector → vault) |
+| **Data ownership** | Partially cloud-dependent | Fully self-hosted, 100% local |
+| **Knowledge base** | Embedded vectors only | Obsidian vault with human-readable Markdown |
+
+---
+
 ## 15. License
 
 MIT — see [LICENSE](LICENSE) for details.
