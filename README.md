@@ -357,6 +357,8 @@ When running, visit `http://localhost:8088/docs` for the interactive Swagger UI.
 
 ## 8. Configuration
 
+### Environment Setup
+
 Copy `.env.example` to `.env` for full customization:
 
 ```bash
@@ -381,6 +383,55 @@ cp .env.example .env
 | `MEMORY_API_PORT` | `8088` | Memory API port |
 | `OBSIDIAN_WEB_PORT` | `3000` | Obsidian web UI port |
 | `OBSIDIAN_VNC_PORT` | `5900` | Obsidian VNC port |
+
+### Default Network Configuration
+
+**By default, all services bind to `127.0.0.1` (localhost).** This means Kilo Cortex is accessible only from your local machine for maximum security and simplicity.
+
+**All API calls use:**
+```bash
+# Default: localhost services
+curl http://127.0.0.1:8088/health
+# or equivalently
+curl http://localhost:8088/health
+```
+
+### Changing Service IPs (Custom Infrastructure)
+
+If you want to expose services to a network or use custom infrastructure (remote database, separate VM, etc.):
+
+**Option 1: Edit `docker-compose.yaml`**
+```yaml
+services:
+  mariadb:
+    ports:
+      - "0.0.0.0:3306:3306"  # Listen on all interfaces instead of 127.0.0.1
+```
+
+**Option 2: Use environment overrides**
+```bash
+# Expose only to your internal network (e.g., 192.168.1.0/24)
+MARIADB_BIND=192.168.1.50 docker compose up -d
+```
+
+**Option 3: Point to external services**
+If your MariaDB, Redis, or Qdrant are already running elsewhere:
+
+1. Edit `.env` and add:
+```bash
+EXTERNAL_MARIADB_HOST=192.168.1.12
+EXTERNAL_MARIADB_PORT=3306
+EXTERNAL_REDIS_HOST=192.168.1.15
+EXTERNAL_REDIS_PORT=6379
+```
+
+2. Update `docker-compose.yaml` to reference external services instead of containers.
+
+**Security Note:** When exposing services to a network, always:
+- Use strong passwords (`.env` defaults are placeholders only)
+- Restrict firewall rules to trusted IPs only
+- Use TLS/mTLS for external connections
+- Change default Qdrant API keys
 
 ### Embedding Models
 
