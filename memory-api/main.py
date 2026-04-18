@@ -259,7 +259,7 @@ async def create_memory(entry: MemoryEntry):
                     "INSERT INTO sessions (session_id, start_time) VALUES (%s, NOW())",
                     ("default" if not session_id else session_id),
                 )
-                session_id = cur.lastrow_id
+                session_id = cur.lastrowid
 
         # Insert memory
         tags_json = json.dumps(entry.tags) if entry.tags else None
@@ -268,7 +268,7 @@ async def create_memory(entry: MemoryEntry):
                VALUES (%s, %s, %s, 1.00, 100.00, NOW())""",
             (entry.content, entry.category or "general", tags_json),
         )
-        entry_id = cur.lastrow_id
+        entry_id = cur.lastrowid
 
         # Generate embedding if model is available
         embedding_id = None
@@ -385,11 +385,11 @@ async def delete_memory(entry_id: int):
 async def search_memories(req: SearchRequest):
     """Semantic search across memory entries using vector + keyword hybrid."""
     conn = get_mdb()
-    r = get_redis()
+    redis_conn = get_redis()
     try:
         # Check cache
         cache_key = f"kilo:search:{make_hash(req.query)[:16]}"
-        cached = r.get(cache_key)
+        cached = redis_conn.get(cache_key)
         if cached and req.query != "":
             results = json.loads(cached)
             return {"results": results, "cached": True, "query": req.query}
@@ -451,15 +451,28 @@ async def search_memories(req: SearchRequest):
         results.sort(key=lambda x: x.get("score", 0), reverse=True)
         seen = set()
         unique = []
-        for r in results:
-            eid = r.get("entry_id")
+        for entry in results:
+            eid = entry.get("entry_id")
             if eid and eid not in seen:
                 seen.add(eid)
-                unique.append(r)
+                unique.append(entry)
 
         # Cache results
         if req.query:
-            r.setex(cache_key, 300, json.dumps(unique))
+            # Convert types not JSON serializable
+            serializable = []
+            for entry in unique:
+                clean = {}
+                for k, v in entry.items():
+                    if isinstance(v, (int, float)):
+                        clean[k] = v
+                    else:
+                        try:
+                            clean[k] = float(v)
+                        except (TypeError, ValueError):
+                            clean[k] = str(v)
+                serializable.append(clean)
+            redis_conn.setex(cache_key, 300, json.dumps(serializable))
 
         return {"results": unique[: req.limit], "cached": False, "query": req.query}
     finally:
@@ -549,7 +562,7 @@ async def create_rule(rule: dict):
             ),
         )
         conn.commit()
-        return {"id": cur.lastrow_id, "status": "created"}
+        return {"id": cur.lastrowid, "status": "created"}
     finally:
         conn.close()
 
@@ -666,7 +679,7 @@ async def add_discovery(entry: DiscoveryEntry):
             ),
         )
         conn.commit()
-        return {"id": cur.lastrow_id, "status": "discovered"}
+        return {"id": cur.lastrowid, "status": "discovered"}
     finally:
         conn.close()
 
@@ -703,7 +716,7 @@ async def ingest_memory(entry: IngestEntry):
             (entry.source, make_hash(entry.content), entry.content[:200]),
         )
         conn.commit()
-        return {"id": cur.lastrow_id, "status": "queued", "source": entry.source}
+        return {"id": cur.lastrowid, "status": "queued", "source": entry.source}
     finally:
         conn.close()
 
