@@ -9,7 +9,7 @@ Self-hosted, Hebbian learning, temporal reasoning, adaptive forgetting — the f
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-ready-blue?logo=docker)](https://docker.com)
 [![Python](https://img.shields.io/badge/python-3.12+-green.svg)](https://python.org)
-[![Stars](https://img.shields.io/github/stars/zack/kilo-cortex?style=social)](https://git.zyusof.net/zack/kilo-cortex)
+[![Stars](https://img.shields.io/github/stars/zack/kilo-cortex?style=social)](https://github.com/zackyusof/kilo-cortex)
 
 </div>
 
@@ -467,13 +467,96 @@ EXTERNAL_REDIS_PORT=6379
 - Use TLS/mTLS for external connections
 - Change default Qdrant API keys
 
-### Embedding Models
+### The Embedding Question: What Powers Semantic Search?
 
-| Model | Dimensions | Use Case |
-|-------|-----------|----------|
-| `all-minilm` (default) | 384 | CPU, fast, lightweight |
-| `nomic-embed-text` | 768 | Better quality, still CPU-friendly |
-| `mxbai-embed-large` | 1024 | Higher quality, more VRAM |
+**By default, Kilo Cortex includes Ollama** — a local embedding service. But you have options.
+
+#### Option 1: Ollama (Built-in, Default) — Private & Free
+
+Ollama runs **locally on your machine** and generates embeddings without sending data anywhere.
+
+**Models:**
+
+| Model | Dimensions | Speed | Quality | RAM | Use Case |
+|-------|-----------|-------|---------|-----|----------|
+| `all-minilm` (default) | 384 | Fast | Good | 70MB | Default choice, lightweight |
+| `nomic-embed-text` | 768 | Medium | Better | 270MB | Better quality, still fast |
+| `mxbai-embed-large` | 1024 | Slow | Best | 2.4GB | Highest quality, needs GPU |
+
+**Pros:** ✅ Private, ✅ Free, ✅ Offline, ✅ No API keys  
+**Cons:** ❌ Slower (~100ms vs cloud ~20ms)  
+**Best for:** Privacy-first, self-hosted, air-gapped deployments
+
+Pull different models:
+```bash
+docker exec kilo-ollama ollama pull nomic-embed-text
+```
+
+---
+
+#### Option 2: External Embedding Provider (Cloud-based)
+
+Replace Ollama with OpenAI, HuggingFace, Cohere, or any API-based service.
+
+**OpenAI Embeddings (Recommended for cloud):**
+```bash
+# In .env
+EMBEDDING_MODEL=openai
+EMBEDDING_API_KEY=sk-...
+EMBEDDING_BASE_URL=https://api.openai.com/v1/embeddings
+```
+Cost: $0.02 per 1M tokens (~$0.02 per 1000 memories)
+
+**HuggingFace Inference API:**
+```bash
+EMBEDDING_MODEL=sentence-transformers/all-minilm-l6-v2
+EMBEDDING_API_KEY=hf_...
+EMBEDDING_BASE_URL=https://api-inference.huggingface.co/models/
+```
+Cost: Free tier or $9+/month
+
+**Cohere Embed:**
+```bash
+EMBEDDING_MODEL=embed-english-v3.0
+EMBEDDING_API_KEY=...
+EMBEDDING_BASE_URL=https://api.cohere.ai/v1/embed
+```
+Cost: $0.10 per 1M tokens
+
+**Pros:** ✅ Fast, ✅ High quality, ✅ Scales easily  
+**Cons:** ❌ Sends data to cloud, ❌ Costs money, ❌ Needs API keys  
+**Best for:** Performance-critical, cloud-friendly deployments
+
+---
+
+#### Option 3: No Embeddings (Keyword Search Only)
+
+You can skip embeddings entirely. You'll have:
+- ✅ Keyword/regex search
+- ✅ Pattern triggers  
+- ✅ Learned rules
+- ✅ Hebbian learning
+- ❌ **Semantic search** (40% capability loss)
+
+---
+
+### Container Architecture: What Each Does
+
+Kilo Cortex deploys **8 containers**. Here's what they do:
+
+| Container | Port | Required? | Purpose | What You Lose If Gone |
+|-----------|------|-----------|---------|----------------------|
+| **MariaDB** | 3306 | ✅ Yes | Structured memory database (rules, links, decisions) | All persistent memory, all learning history |
+| **Redis** | 6379 | ✅ Yes | L1 hot cache (session state, embedding cache) | Session context, 100x slower search |
+| **Qdrant** | 6333 | ✅ Yes | Vector database (semantic relationships) | Semantic search (can't find by meaning) |
+| **Ollama** | 11434 | ⚠️ Optional* | Generate embeddings locally | Must use external embedding API |
+| **Memory API** | 8088 | ✅ Yes | HTTP interface + orchestration | No way to interact with system |
+| **Obsidian** | 3000/5900 | ✅ Recommended | Visual knowledge vault (rich UI) | Rich knowledge vault, attachments, markdown notes |
+| **MCP Server** | (stdio) | ⚠️ Optional† | Claude Code / Cursor integration | Can't access from Claude Code/IDE |
+| **Kilo Init** | (one-shot) | ✅ Yes | Bootstrap schema + create collections | Database schema not initialized, system won't start |
+
+*Either Ollama OR an external embedding provider is required. Pick one.  
+†Optional only if not using Claude Code or Cursor.
 
 ---
 
