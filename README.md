@@ -88,7 +88,7 @@ Month 6: Agent anticipates your moves
 ## 1. TL;DR — Running in 30 Seconds
 
 ```bash
-git clone https://git.zyusof.net/zack/kilo-cortex.git && cd kilo-cortex
+git clone https://github.com/zackyusof/kilo-cortex.git && cd kilo-cortex
 docker compose up -d
 curl -s http://localhost:8088/health
 ```
@@ -307,7 +307,7 @@ curl -s http://localhost:8088/search -X POST \
 ### Install
 
 ```bash
-git clone https://git.zyusof.net/zack/kilo-cortex.git
+git clone https://github.com/zackyusof/kilo-cortex.git
 cd kilo-cortex
 ```
 
