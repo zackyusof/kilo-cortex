@@ -445,7 +445,7 @@ services:
 **Option 2: Use environment overrides**
 ```bash
 # Expose only to your internal network (e.g., 192.168.1.0/24)
-MARIADB_BIND=192.168.1.50 docker compose up -d
+MARIADB_BIND=192.168.1.x docker compose up -d
 ```
 
 **Option 3: Point to external services**
@@ -453,9 +453,9 @@ If your MariaDB, Redis, or Qdrant are already running elsewhere:
 
 1. Edit `.env` and add:
 ```bash
-EXTERNAL_MARIADB_HOST=192.168.1.12
+EXTERNAL_MARIADB_HOST=192.168.1.x
 EXTERNAL_MARIADB_PORT=3306
-EXTERNAL_REDIS_HOST=192.168.1.15
+EXTERNAL_REDIS_HOST=192.168.1.x
 EXTERNAL_REDIS_PORT=6379
 ```
 
