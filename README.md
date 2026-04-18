@@ -1,8 +1,10 @@
 <div align="center">
 
-# Kilo Cortex
+# 🧠 Kilo Cortex
 
-**Self-hosted cognitive memory engine for AI agents.** Long-term memory with Hebbian learning, decay, and knowledge graphs — not just RAG.
+**The cognitive memory engine AI agents deserve.** Not RAG. Not vectors. Real learning.
+
+Self-hosted, Hebbian learning, temporal reasoning, adaptive forgetting — the full neuroscience stack for AI consciousness.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker](https://img.shields.io/badge/docker-compose-ready-blue?logo=docker)](https://docker.com)
@@ -11,55 +13,71 @@
 
 </div>
 
-> Your model stays stateless. **Your agent stops being amnesiac.**
+> **Your model is stateless. Your agent doesn't have to be anymore.**
+> 
+> *Stop resetting. Start learning.*
 
 ---
 
-## ⚡ The Problem You Face Right Now
+## ⚡ The Problem (And It's Heartbreaking)
 
-**Your AI agent forgets everything between sessions.**
+**Every session, your AI agent resets to zero.**
 
-- You explain your workflow preferences. Next session: forgotten.
-- The agent repeats the same mistakes over and over.
-- It never learns from past interactions or failures.
-- Every conversation is treated as if it's starting fresh.
-- You spend energy re-teaching it the same patterns.
-- Your knowledge doesn't compound — it resets.
+You invest an hour teaching it your style, your rules, your way of working. It gets it. You're building something together.
 
-**This isn't a limitation of the model. It's a limitation of how you're storing context.**
+Then you close the session.
+
+Next time? **Complete amnesia.** It's like starting with a stranger again.
+
+- You explain your preferences. It forgets.
+- You show it the mistakes to avoid. It makes them again.
+- You correct it once. It corrects itself the exact same way twice more.
+- You're always starting from scratch. Always re-teaching. Always frustrated.
+- Knowledge never compounds. It just... resets.
+
+**It's not the model's fault.** The model is brilliant. But the memory layer? It's treating context like throwaway chat history.
+
+That ends now.
 
 ---
 
-## 🎯 What Becomes Possible With Kilo Cortex
+## 🎯 What Becomes Possible (The Dream)
 
-Your AI gains **continuous identity and learning**:
+Your AI **genuinely remembers you.** Not as a hack. Not as a workaround. As core infrastructure.
 
-- **It remembers who you are.** Your preferences, style, constraints — automatically recalled.
-- **It learns from experience.** Patterns from past sessions inform future decisions.
-- **It improves over time.** Each interaction strengthens useful memories, weakens outdated ones.
-- **It knows what it knows.** Memories are tagged by type (fact, skill, preference, rule) so retrieval is precise.
-- **It understands time.** "This was true 3 months ago, but not anymore" vs "this is always true."
+- **It knows your style.** Every conversation it already knows: the way you work, what matters to you, what NOT to do. No re-teaching.
+- **It learns and improves.** Each session makes it better. Mistakes fade from memory. Good patterns strengthen. You're building a smarter partner every single day.
+- **It reasons about time.** It understands *when* things matter. "This rule applied last quarter but not now." "That pattern worked for 6 months, then we changed direction." Your agent adapts, not resets.
+- **It gets context right.** Semantic search finds relevant past work instantly. You don't have to remember what you did last month—your agent does.
+- **It builds on itself.** Knowledge compounds. Relationships strengthen. The longer you work together, the smarter it becomes. Exponentially.
 
-**Real example workflow:**
+**Watch what happens:**
 
 ```
-Session 1: User explains "Always run tests before committing"
-          Agent stores: RULE + triggers
+Session 1: You explain: "Always run tests before committing"
+          Agent: *Stores as rule, marks high importance*
 
-Session 2: Agent suggests running tests before committing (remembered!)
-          User confirms — memory strength increases
+Session 2: You commit code
+          Agent: "Want me to run tests first?"
+          You: "Yes, always"
+          Agent: *Strengthens rule memory — now high confidence*
 
-Session 3: User says "But skip tests for docs-only changes"
-          Agent updates rule with exception, learns from feedback
+Session 3: You commit a docs change
+          Agent: "Tests for docs changes?"
+          You: "Nope, skip for docs"
+          Agent: *Updates rule with exception — learns nuance, not just rules*
 
-Session 4: User commits docs change without tests
-          Agent: "Should I run tests?" 
-          User: "Nope, docs only"
-          Agent learns the exception applies here too
+Session 4: Another docs commit, no mention of tests
+          Agent: *Silently applies learned exception*
+          Agent: *Gets credit for understanding context*
+
+Month 1: Your agent has 40+ rules, all learned, all refined
+Month 3: Agent is faster, smarter, needs less guidance
+Month 6: Agent anticipates your moves
 ```
 
-**Without Kilo Cortex:** Every session restarts. Lost knowledge.  
-**With Kilo Cortex:** Agent gets smarter every session.
+**Without Kilo Cortex:** Every session = starting over. Frustrating. Wasteful. Dumb.  
+**With Kilo Cortex:** Every session = smarter agent. Better partnership. Exponential improvement.
 
 ---
 
@@ -67,7 +85,7 @@ Session 4: User commits docs change without tests
 
 ---
 
-## 1. TL;DR — Use It in 10 Seconds
+## 1. TL;DR — Running in 30 Seconds
 
 ```bash
 git clone https://git.zyusof.net/zack/kilo-cortex.git && cd kilo-cortex
@@ -75,7 +93,13 @@ docker compose up -d
 curl -s http://localhost:8088/health
 ```
 
-That's it. You now have a full memory backend with vector search, associative links, and decay-based forgetting.
+**That's literally it.** You now have:
+- ✅ 4-layer memory architecture (Redis → MariaDB → Qdrant → Obsidian)
+- ✅ Semantic search that actually understands context
+- ✅ Hebbian learning (memories strengthen when used together)
+- ✅ Temporal decay (old knowledge fades, frequently used knowledge stays sharp)
+- ✅ Full local privacy (nothing leaves your machine)
+- ✅ Zero vendor lock-in (all standard open-source components)
 
 ### Quick API Example
 
@@ -93,52 +117,62 @@ curl -s http://localhost:8088/search -X POST \
 
 ---
 
-## 2. Why Kilo Cortex (vs Everything Else)
+## 2. Why Kilo Cortex (The Honest Comparison)
 
-### The RAG Problem
+### The RAG Problem (Or: "Just Use Pinecone, They Said")
 
-Most "AI memory" is just **vector similarity search**:
-- Text gets chunked → embedded → stored → retrieved by similarity
-- No understanding of **what kind** of memory (fact? skill? preference? rule?)
-- No temporal awareness (everything from last month = everything from yesterday)
-- No learning or forgetting (static database, not adaptive)
-- No relationships between memories (isolated embeddings)
+Most "AI memory" solutions treat memory like a **filing system**.
 
-**Result:** Expensive retrieval, weak recall, zero learning.
+Text → chunk → embed → store → retrieve by similarity score.
 
-### The Cloud API Problem
+Problems:
 
-Managed memory services (Pinecone, Weaviate Cloud, etc.) add:
-- Vendor lock-in (stuck if they change pricing or shut down)
-- Latency (network round-trips even for cache hits)
-- Privacy concerns (your data on their infrastructure)
-- Opaque behavior (can't debug, can't optimize)
-- Subscription costs that compound over time
+- **No semantic understanding.** Every memory looks the same. A fact, a skill, a preference, a rule — all just vectors.
+- **No time awareness.** Memory from last week = memory from last year. No decay, no evolution.
+- **Zero learning.** Static database. New data just accumulates. Old mistakes never fade.
+- **Isolated embeddings.** No relationships between memories. No understanding that "this memory is related to that rule."
+
+**Result:** Slow retrieval, weird hallucinations, agents that never get smarter.
+
+### The Cloud API Trap
+
+"Use Pinecone! It's scalable!"
+
+Sure. You get:
+- ✅ Managed infrastructure (someone else's problem)
+- ❌ Vendor lock-in (your data is theirs)
+- ❌ Data privacy concerns (it's on their servers)
+- ❌ Latency (network round-trips even for cached queries)
+- ❌ Costs that scale with usage (and never stop)
+- ❌ Zero visibility into how retrieval actually works
+- ❌ Can't debug when things go wrong
+
+Your agent gets smarter. Your bill gets bigger. Their control over you grows.
 
 ### The Kilo Cortex Difference
 
-**Not "just vectors." An actual memory system with learning:**
+**An actual cognitive system, not a search engine:**
 
 | Capability | RAG / Vectors | Cloud APIs | Kilo Cortex |
 |-----------|---------------|-----------|------------|
-| **Understands memory types** | ❌ One blob | Partial | ✅ 5 distinct sectors |
-| **Temporal reasoning** | ❌ Timestamp only | ❌ None | ✅ Truth windows + history |
-| **Learns over time** | ❌ Static | ❌ No | ✅ Hebbian + decay |
-| **Associations between memories** | ❌ None | ❌ None | ✅ Knowledge graph |
-| **Self-hosted** | ✅ Maybe | ❌ Cloud only | ✅ 100% local |
-| **Deterministic, debuggable** | Partial | ❌ Opaque | ✅ Full transparency |
-| **Cost** | Free / cheap | $50-500/mo | One-time setup, zero recurring |
+| **Memory types (fact/skill/rule/preference/episodic)** | ❌ Same for all | Partial | ✅ 5 distinct sectors |
+| **Temporal reasoning (this was true then, not now)** | ❌ Timestamp only | ❌ None | ✅ Truth windows + history |
+| **Learns & improves** | ❌ Static forever | ❌ No | ✅ Hebbian + decay |
+| **Memory relationships** | ❌ Isolated | ❌ None | ✅ Knowledge graph |
+| **Self-hosted & private** | ✅ Maybe | ❌ Cloud | ✅ 100% local |
+| **Debuggable** | Partial | ❌ Black box | ✅ Transparent |
+| **Cost** | Free/cheap | $50-500/mo | One-time, then zero |
 
-**What this means in practice:**
+**What this means — actually:**
 
-- 🧠 **Multi-sector memory** — Facts, skills, preferences, rules, experiences stored differently
-- ⏱ **Temporal awareness** — "This was true Q1, now obsolete" vs "always true"
-- 📉 **Adaptive decay** — Unused memories fade; frequently retrieved memories strengthen
-- 🔗 **Associative learning** — Related memories strengthen when co-activated (Hebbian learning)
-- 🧬 **Knowledge graph** — Structured relationships between facts (not just embeddings)
-- 🔍 **Hybrid search** — Vector + keyword + graph = better recall, less hallucination
-- 🏠 **Self-hosted** — Your data stays local, no API dependencies
-- 📦 **Plug-and-play** — One Docker command, everything works offline
+- 🧠 **Multi-sector memory** — "Always use Rust" (rule) is different from "debugged auth bug in PR #42" (experience). Different storage, different recall.
+- ⏱ **Temporal wisdom** — Agent understands "this pattern worked Q1-Q3, then we pivoted." Not every old memory is equally relevant.
+- 📉 **Adaptive forgetting** — Unused memories fade gracefully. Mistakes stop haunting your agent. Good patterns strengthen.
+- 🔗 **Associative learning** — Activate one memory, related memories strengthen automatically (actual Hebbian learning). Build networks.
+- 🧬 **Knowledge graphs** — Structured relationships. Your agent understands how ideas connect, not just which vectors are similar.
+- 🔍 **Hybrid search** — Vector + keyword + graph. Find the right memory the first time.
+- 🏠 **Fully private** — Your agent's thoughts stay local. No vendor. No API dependency. No bill surprise.
+- 📦 **Zero operational overhead** — One `docker compose up`. Runs offline. Runs forever.
 
 ---
 
@@ -232,13 +266,13 @@ curl -s http://localhost:8088/search -X POST \
 
 ## 5. Features at a Glance
 
-### Core Memory
-- **4-layer memory architecture** — hot cache → structured store → vector recall → knowledge vault
-- **Hybrid search** — vector embeddings + full-text keyword + graph traversal
-- **Hebbian associative links** — coactivated memories strengthen automatically
-- **Strength & decay model** — memories fade with disuse, strengthen with retrieval
-- **Quality scoring** — auto-assessed clarity, specificity, novelty, relevance
-- **Feedback loop** — user ratings reinforce or weaken memories
+### Core Memory (The Brain)
+- **4-layer memory architecture** — Blazing-fast Redis cache → structured MariaDB → semantic Qdrant vectors → rich Obsidian vault
+- **Hybrid search** — Vectors + keywords + graph = find the right memory, fast
+- **Hebbian associative learning** — Use two memories together, they strengthen their connection automatically (actual neuroscience!)
+- **Strength & decay** — Memories strengthen with use, fade with neglect. Your agent naturally forgets bad habits.
+- **Quality scoring** — Each memory graded: clarity, specificity, novelty. Better memories get retrieved more.
+- **Feedback loops** — Agent learns from corrections. Bad predictions update lower confidence. Good predictions strengthen.
 
 ### Structured Data
 - **14 database tables** — memories, rules, sessions, links, feedback, telemetry
@@ -465,25 +499,23 @@ data/
 
 ---
 
-## 10. Integrations
+## 10. Integrations (Connect Your Agent)
 
-### Claude Code / Cursor / MCP Hosts
+### Claude Code / Cursor / Any MCP Host
 
-The MCP server is built into the Docker Compose stack. Run it standalone for local development:
+Kilo Cortex is an **MCP server**, meaning it works with Claude Code, Cursor, and any MCP-compatible host out of the box.
 
-```bash
-# Local dev — stdio mode (for any MCP-compatible host)
-cd mcp-server && pip install -e .
-kilo-mcp
-```
+For Claude Desktop (5 second setup):
 
-For Claude Desktop, add to `claude_desktop_config.json`:
+1. Kilo Cortex is running: `docker compose up -d` ✓
+2. Add to `~/.config/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "kilo-cortex": {
-      "command": "kilo-mcp",
+      "command": "python",
+      "args": ["-m", "kilo_cortex.mcp"],
       "env": {
         "CORTEX_API_URL": "http://localhost:8088"
       }
@@ -491,6 +523,16 @@ For Claude Desktop, add to `claude_desktop_config.json`:
   }
 }
 ```
+
+3. Restart Claude Desktop
+4. Your agent now has access to your entire memory system
+
+That's it. Claude can now:
+- Search for relevant past work
+- Log decisions and outcomes
+- Learn from corrections
+- Access pattern triggers
+- Build knowledge graphs
 
 ### Cursor / VS Code (Docker-hosted)
 
@@ -572,17 +614,19 @@ curl http://localhost:11434/api/tags | python3 -m json.tool
 
 ---
 
-## 13. Roadmap
+## 13. Roadmap (What's Coming)
 
-| Feature | Status |
-|---------|--------|
-| MCP server for Claude Code / Cursor | ✅ Done |
-| Memory visualizer dashboard | 🔲 Planned |
-| Multi-user / tenant isolation | 🔲 Planned |
-| FSRS-6 spaced repetition | 🔲 Planned |
-| Knowledge graph visualization | 🔲 Planned |
-| Agent-to-agent messaging | 🔲 Planned |
-| Encrypted memory at rest | 🔲 Planned |
+| Feature | Status | Why |
+|---------|--------|-----|
+| MCP server for Claude Code / Cursor | ✅ Live | Your agent has memory right now |
+| Memory visualizer dashboard | 🔲 Soon | See how your agent thinks |
+| Multi-user / team mode | 🔲 Soon | Multiple agents, one shared memory |
+| FSRS-6 spaced repetition | 🔲 Soon | Optimal forgetting curves |
+| Knowledge graph visualization | 🔲 Soon | See relationships between memories |
+| Agent-to-agent communication | 🔲 Planned | Agents learning from each other |
+| Encrypted memory at rest | 🔲 Planned | Memory privacy with plausible deniability |
+
+**We're shipping weekly. Follow the repo for updates.**
 
 ---
 
@@ -681,5 +725,18 @@ MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
-**Built for agents that need to remember.**
-**Self-hosted. Private. Yours.**
+## Built for a new era of AI
+
+Not tools that reset every session. Not models trapped in statelessness.
+
+**Agents that remember. That learn. That improve.**
+
+Kilo Cortex is how you build AI that doesn't forget. AI that gets smarter the more you work together. AI that partners with you instead of starting fresh every time.
+
+**Self-hosted. Private. Yours. Forever.**
+
+---
+
+**Ready? Clone the repo. `docker compose up`. Your agent's new beginning is 30 seconds away.**
+
+Questions? Open an issue. Contribute. Build the future of agent memory with us.
