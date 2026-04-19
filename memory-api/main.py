@@ -233,11 +233,11 @@ async def create_memory(entry: MemoryEntry):
     try:
         cur = conn.cursor()
 
-        # Dedup check
-        h = make_hash(entry.content[:500])
+        # Dedup check - compare hash of content against SHA2 of stored content
+        content_hash = make_hash(entry.content[:500])
         cur.execute(
             "SELECT id FROM memory_entries WHERE SHA2(%s, 256) = %s AND created_at > NOW() - INTERVAL 30 SECOND",
-            (entry.content, h),
+            (entry.content[:500], content_hash),
         )
         if cur.fetchone():
             return {
@@ -286,7 +286,7 @@ async def create_memory(entry: MemoryEntry):
             # Upsert in Qdrant
             qdrant_request(
                 "PUT",
-                f"/collections/{collection}/points/unused",
+                f"/collections/{collection}/points/{entry_id}",
                 {
                     "points": [
                         {
